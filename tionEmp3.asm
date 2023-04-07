@@ -13,7 +13,9 @@ scanfmtD db "%d",0
 
 signal dd -1, 3, 4, 0, 9, 0x80000000
 sample_count dd 0
+signal_start dd 0
 signal_end dd 0
+signal_ctr dd 0
 
 h0 dd 0
 h1 dd 0
@@ -65,12 +67,12 @@ begin:
     xor EBX, EBX
     push EBX
     push prompt
-    call printf
+    call printf ; printf("Enter coefficient h%d: ", EBX);
     add esp, 8
     
     push h0 ; Scan to h0
     push scanfmtD
-    call scanf
+    call scanf  ; scanf("%d: ", h0);
     add esp, 8
     
     ; --- User inputs 2
@@ -78,7 +80,7 @@ begin:
     
     push EBX
     push prompt
-    call printf
+    call printf ; printf("Enter coefficient h%d: ", EBX);
     add esp, 8
     
     push h1 ; Scan to h1
@@ -99,19 +101,15 @@ begin:
     call scanf
     add esp, 8
 
-
 operate:
-    ; EBX contains pointer to last number
-    mov EBX, [signal_end]
-    add EBX, -4
-    
-    ; Store bottom pointer of the list
-    xor EDX, EDX
-    xor ESI, ESI    ; For counting loop
-
     push promptend
     call printf
     add esp, 4
+   
+    
+    xor EBX, EBX    
+    mov [signal_start], EBX ; For pointer start
+    mov [signal_ctr], EBX   ; For counting loop
     
     jmp filter
 
@@ -122,54 +120,57 @@ comma:
     add esp, 4
     
 filter:
+    mov EBX, [signal_start]
+
     ; --- z1
-    xor EAX, EAX
-    add EAX, dword [h2]   
+    xor ECX, ECX
+    add ECX, dword [h2]   
     
-    mov ECX, dword [signal+EDX]   ; Get x0
-    mul EAX
+    mov EAX, dword [signal+EBX]   ; Get x0
+    mul ECX
     
-    mov [z1], ECX   ; x(n) * h2
-    add EDX, 4
+    mov [z1], EAX   ; x(n) * h2
+    add EBX, 4
     
     ; --- z2
-    xor EAX, EAX
-    add EAX, dword [h1]
+    xor ECX, ECX
+    add ECX, dword [h1]
     
-    mov ECX, [signal+EDX]   ; Get x1
-    mul EAX
+    mov EAX, dword [signal+EBX]   ; Get x1
+    mul ECX
     
-    mov dword [z2], ECX   ; x(n+1) * h1
-    add EDX, 4
+    mov [z2], EAX   ; x(n+1) * h1
+    add EBX, 4
     
     ; --- FINAL
-    xor EAX, EAX
-    add EAX, [h0]
+    xor ECX, ECX
+    add ECX, dword [h0]
     
-    mov ECX, [signal+EDX]   ; Get x2
-    mul EAX
+    mov EAX, dword [signal+EBX]   ; Get x2
+    mul ECX
     
     add EAX, dword [z1]   ; [ x(n+0) * h2 ] +
     add EAX, dword [z2]   ; [ x(n+1) * h1 ] +  [x(n+2) * h0 ]
     
-    
 print_output:
-    mov [print_filter], EAX
-    
     ; Print answer
-    push print_filter
-    push print_answer
+    push EAX
+    push print_answer   ; printf("%d");
     call printf
     add esp, 8
     
-    add ESI, 3  ; Add 1 for loop iteration, and 2 to make sure below last 2
-    cmp ESI, [sample_count]  ; Check if reached last 2
+    mov EBX, [signal_ctr]
+    add EBX, 3  ; Add 1 for loop iteration, and 2 to make sure below last 2
+    cmp EBX, [sample_count]  ; Check if reached last 2
     je tapos  ; Program is done!
     
-    add ESI, -2     ; Normalize back to normal looping
+    add EBX, -2     ; Normalize back to normal looping
+    mov [signal_ctr], EBX
 
-    mov EDX, ESI    ; Start at index of loop
-    imul EDX, 4     ; Pointer format
+    mov EBX, [signal_start]
+    add EBX, 4
+    imul EBX, 4     ; Pointer format
+    mov [signal_start], EBX
     jmp comma   ; Back to filtering (and add comma to number!)
     
 tapos:
