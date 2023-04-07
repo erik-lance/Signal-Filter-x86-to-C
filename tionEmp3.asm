@@ -168,7 +168,7 @@ print_output:
     mov [signal_ctr], EBX
 
     mov EBX, [signal_start]
-    add EBX, 4
+    add EBX, 1
     imul EBX, 4     ; Pointer format
     mov [signal_start], EBX
     jmp comma   ; Back to filtering (and add comma to number!)
