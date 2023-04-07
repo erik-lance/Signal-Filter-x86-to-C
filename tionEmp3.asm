@@ -1,6 +1,6 @@
 ; Erik Lance L. Tiongquico - S14
 global main
-extern printf, system, scanf
+extern printf, system, scanf, getchar
 
 section .data
 clrstr db "cls",0
@@ -21,7 +21,6 @@ h0 dd 0
 h1 dd 0
 h2 dd 0
 
-print_filter dd 0
 print_answer db "%d",0
 print_comma db ", ",0
 
@@ -54,7 +53,6 @@ count_samples:
     
     mov [sample_count], ECX
 
-begin:
     mov [signal_end], EBX
     
     ; printf(promptstart)
@@ -62,6 +60,9 @@ begin:
     push promptstart
     call printf
     add esp, 8  ; 2 bytes pushed
+
+begin:
+    
     
     ; --- User inputs 1
     xor EBX, EBX
@@ -173,5 +174,17 @@ print_output:
     jmp comma   ; Back to filtering (and add comma to number!)
     
 tapos:
+    push promptagain
+    call printf
+    add esp, 4
+
+    call getchar ; This automatically grabs EAX in C.
+    call getchar ; This automatically grabs EAX in C.
+    add esp, 8   ; This is simply for cheating the buffer.
+    
+    cmp EAX, 89 ; Check if (Y)
+    
+    je begin
+
     xor eax, eax
     ret
