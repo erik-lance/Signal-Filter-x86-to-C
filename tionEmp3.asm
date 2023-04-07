@@ -6,7 +6,7 @@ section .data
 clrstr db "cls",0
 promptstart db "The signal has %d samples. ",10,0
 prompt db "Enter coefficient h%d:",0
-promptend db "Filter output:",0
+promptend db "Filter output:",10,0
 promptagain db "Want to try again? (y/n): ",0
 
 scanfmtD db "%d",0
@@ -19,7 +19,13 @@ h0 dd 0
 h1 dd 0
 h2 dd 0
 
+print_filter dd 0
+print_answer db "%d",0
+print_comma db ", ",0
 
+; Temporary
+z1 dd 0
+z2 dd 0
 
 section .text
 main:
@@ -101,17 +107,64 @@ operate:
     
     ; Store bottom pointer of the list
     xor EDX, EDX
-    add EDX, 8  ; Start at 3rd index
+    
+    mov ESI, EDX    ; Copy
+    
+    xor EDI, EDI    ; For counting loop
 
+    push promptend
+    call printf
+    add esp, 4
+    
+    jmp filter
+
+comma:
+    ; If not yet last answer, add comma
+    push print_comma
+    call printf
+    add esp, 4
+    
 filter:
+    ; --- z1
+    xor EAX, EAX
+    add EAX, [h2]   
     
+    mov ECX, [signal+EDX]   ; Get x0
+    mul EAX
     
+    mov [z1], ECX   ; x(n) * h2
+    add EDX, 4
     
+    ; --- z2
+    xor EAX, EAX
+    add EAX, [h1]
     
+    mov ECX, [signal+EDX]   ; Get x1
+    mul EAX
+    
+    mov [z2], ECX   ; x(n+1) * h1
+    add EDX, 4
+    
+    ; --- FINAL
+    xor EAX, EAX
+    add EAX, [h0]
+    
+    mov ECX, [signal+EDX]   ; Get x2
+    mul EAX
+    
+    add EAX, [z1]   ; [ x(n+0) * h2 ] +
+    add EAX, [z2]   ; [ x(n+1) * h1 ] +  [x(n+2) * h0 ]
     
     
 print_output:
+    mov [print_filter], EAX
     
-    
+    ; Print answer
+    push print_filter
+    push print_answer
+    call printf
+    add esp, 8
+
+tapos:
     xor eax, eax
     ret
