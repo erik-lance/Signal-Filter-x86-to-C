@@ -164,7 +164,17 @@ print_output:
     push print_answer
     call printf
     add esp, 8
+    
+    add EDI, 3  ; Add 1 for loop iteration, and 2 to make sure below last 2
+    cmp EDI, [sample_count]  ; Check if reached last 2
+    je tapos  ; Program is done!
+    
+    add EDI, -2     ; Normalize back to normal looping
 
+    mov EDX, EDI    ; Start at index of loop
+    imul EDX, 4     ; Pointer format
+    jmp comma   ; Back to filtering (and add comma to number!)
+    
 tapos:
     xor eax, eax
     ret
