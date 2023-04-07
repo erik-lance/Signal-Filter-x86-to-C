@@ -100,17 +100,8 @@ operate:
     add EBX, -4
     
     ; Store bottom pointer of the list
-    xor ECX, ECX
-    add ECX, [sample_count]
-    imul ECX, 4   ; Convert to fours
-    add EDX, -8 ; 2nd order, remove 2
-    
-    imul ECX, -1  ; Negative to subtract
-    
     xor EDX, EDX
-    add EDX, EBX  ; Subtract to get index 2 (e.g.; 7 samples = 7-5 = 2)
-    
-    add EDX, ECX    ; Now should contain 2nd order
+    add EDX, 8  ; Start at 3rd index
 
 filter:
     
