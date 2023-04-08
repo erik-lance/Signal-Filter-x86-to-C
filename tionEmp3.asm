@@ -7,7 +7,7 @@ clrstr db "cls",0
 promptstart db "The signal has %d samples. ",10,0
 prompt db "Enter coefficient h%d:",10,0
 promptend db "Filter output:",10,0
-promptagain db "Want to try again? (y/n): ",0
+promptagain db 10,"Want to try again? (y/n): ",0
 
 scanfmtD db "%d",0
 
@@ -30,7 +30,6 @@ z2 dd 0
 
 section .text
 main:
-    mov ebp, esp; for correct debugging
     ;cls
     push clrstr
     call system
@@ -183,7 +182,9 @@ tapos:
     add esp, 8   ; This is simply for cheating the buffer.
     
     cmp EAX, 89 ; Check if (Y)
+    je begin
     
+    cmp EAX, 121 ; Check if (y)
     je begin
 
     xor eax, eax
